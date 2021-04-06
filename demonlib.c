@@ -10,9 +10,9 @@ off_t GetSize(char* path)
 }
 mode_t GetChmod(char* path)
 {
-    struct stat chmod;
+    struct stat mod;
     if(!stat(path, &mod))
-        return chmod.st_mode; 
+        return mod.st_mode; 
     syslog(LOG_ERR, "Error while getting chmod, file: %s", path);
     exit(EXIT_FAILURE);
 }
