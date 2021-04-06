@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <syslog.h>
 #include <string.h>
+#include <unistd.h>
+
+
 
 int main(int argc, char** argv)
 {
@@ -12,62 +15,78 @@ int main(int argc, char** argv)
     char* targetPath = NULL;
     bool recurSync = false;
     int threshold = 4096;
-    if(argc>=3)
+    int sleepTimeSeconds = 5 * 60;
+    if(argc<5)
     {
-        sourcePath = argv[1];
-        targetPath = argv[2];
-        
-    }
-    else
-    {
+        printf("Too few args\n");
         syslog(LOG_ERR, "Too few arguments");
         exit(EXIT_FAILURE);
     }
-    if(argc>=4)
+
+
+
+    // pid_t itd...
+
+
+
+
+
+    int parameter;
+    while((parameter = getopt(argc, argv, "i:o:t:y:r")) != -1)
     {
-        if( !strcmp(argv[3],"-R"))
+        switch(parameter)
         {
-            recurSync=true;
-            
-            if( argc >= 5 && !strcmp(argv[4],"-s"))
+            case 'i': 
+            {   
+                sourcePath = optarg;
+                //sprawdzenie sciezki
+                break;
+            }
+            case 'o':
             {
-                if(argc>=5)
-                {
-                    int bufor = atoi(argv[5]);
-                    if(bufor>0)
-                    {
-                        threshold = bufor;
-                    }
-                    else
-                    {
-                        //raport o błędzie
-                    }
-                }
+                targetPath = optarg;
+                //sprawdzenie sciezki
+                break;
+            }
+            case 't':
+            {
+                sleepTimeSeconds = atoi(optarg);
+                break;
+            }
+            case 'r':
+            {
+                recurSync = true;
+                break;
+            }
+            case 'y':
+            {
+                threshold = atoi(optarg);
+                break;
             }
         }
-        else if( !strcmp(argv[3],"-s"))
-        {
-            if(argc>=5)
-            {
-                int bufor = atoi(argv[4]);
-                if(bufor>0)
-                {
-                    threshold = bufor;
-                }
-                else
-                {
-                    //raport o błędzie
-                }
-            }
-            else
-            {
-                //raport o błędzie
-            }
-        }
-        
     }
-    printf("%s\n%s\n%s\n%d\n", sourcePath, targetPath, recurSync ? "true":"false", threshold);
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+    syslog(LOG_INFO, "Synchro-Demon");
+    if(signal(SIGUSR1, Logowanie)==SIG_ERR)
+    {
+        syslog(LOG_ERR, "Signal Error!");
+        exit(EXIT_FAILURE);
+    }
+
+    while(1)
+    {
+
+        //czesc wlasciwa demona
+
+    }
+
+    
+    printf("source: %s\ntarget: %s\nrecurency: %s\nthreshold: %d\nsleep time: %d\n", sourcePath, targetPath, recurSync ? "true":"false", threshold, sleepTimeSeconds);
     closelog();
     exit(EXIT_SUCCESS);
+    return 0;
 
 } 
