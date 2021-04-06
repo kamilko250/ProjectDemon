@@ -24,3 +24,7 @@ time_t GetLastModificationTime(char* path)
     syslog(LOG_ERR, "Error while getting last modification time, file: %s", path);
     exit(EXIT_FAILURE);
 }
+void LogHandler()
+{
+    syslog(LOG_INFO, "Demon woke up - SIGUSR1");
+}
