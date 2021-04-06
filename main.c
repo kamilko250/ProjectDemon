@@ -59,27 +59,28 @@ int main(int argc, char** argv)
             }
         }
     }
+    printf("source: %s\ntarget: %s\nrecurency: %s\nthreshold: %d\nsleep time: %d\n", sourcePath, targetPath, recurSync ? "true":"false", threshold, sleepTimeSeconds);
 
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     syslog(LOG_INFO, "Synchro-Demon");
-    if(signal(SIGUSR1, LogHandler)==SIG_ERR)
+
+    if(signal(SIGUSR1, logHandler) == SIG_ERR)
     {
         syslog(LOG_ERR, "Signal Error!");
         exit(EXIT_FAILURE);
     }
+    closelog();
 
-    while(1)
-    {
-
+    //while(1)
+    //{
+        compareCatalogs();
         //czesc wlasciwa demona
 
-    }
+    //}
 
     
-    printf("source: %s\ntarget: %s\nrecurency: %s\nthreshold: %d\nsleep time: %d\n", sourcePath, targetPath, recurSync ? "true":"false", threshold, sleepTimeSeconds);
-    closelog();
     exit(EXIT_SUCCESS);
     return 0;
 

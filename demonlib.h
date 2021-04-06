@@ -12,7 +12,15 @@
 #include <fcntl.h>
 #include <syslog.h>
 
-off_t GetSize(char* path);
-mode_t GetChmod(char* path);
-time_t GetLastModificationTime(char* path);
-void LogHandler();
+off_t getSize(char* path);
+mode_t getChmod(char* path);
+time_t getLastModificationTime(char* path);
+time_t getLastAccesTime(char* path);
+void logHandler();
+//returns path to any difference
+char* compareCatalogs(char* sourcePath, char* targetPath);
+//updates content source->target 
+void updateFile(char* sourcePath, char* targetPath);
+//sets time of last modification source->target 
+int updateLastModFileTime(char* sourcePath, char* targetPath);
+int updateFileChmod(char* sourcePath, char* targetPath);
