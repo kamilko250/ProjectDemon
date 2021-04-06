@@ -5,6 +5,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 
 
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
     }
 
 
+    pid_t ProcessID, SessionID;
 
     // pid_t itd...
 
