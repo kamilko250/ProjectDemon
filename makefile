@@ -1,20 +1,17 @@
 CC = gcc
-all: main.o demonlib.a
+OBJ = main.o demonlib.o
+$(OBJ): demonlib.h
+all: main.o demonlib.o
 	@echo "Making executable file"
-	ranlib libholberton.a
-	$(CC) -o Demon.out -L. -demonlib main.o 
+	$(CC) -o Demon.out $(OBJ) 
 
 main.o: main.c
 	@echo "Making main.o"
 	$(CC) -c -o main.o main.c
 
-demonlib.a: demonlib.o
-	@echo "Making demonlib.a"
-	ar -rc demonlib.a demonlib.o
-
 demonlib.o: demonlib.c
 	@echo "Making demonlib.o"
-	$(CC) -c -o demonlib.0 demonlib.c
+	$(CC) -c -o demonlib.o demonlib.c
 
 clean: 
 	@echo "Cleaning *.o files"
