@@ -72,7 +72,7 @@ int main(int argc, char** argv)
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     syslog(LOG_INFO, "Synchro-Demon");
-    if(signal(SIGUSR1, Logowanie)==SIG_ERR)
+    if(signal(SIGUSR1, LogHandler())==SIG_ERR)
     {
         syslog(LOG_ERR, "Signal Error!");
         exit(EXIT_FAILURE);
