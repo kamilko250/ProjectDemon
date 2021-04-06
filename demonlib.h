@@ -1,11 +1,16 @@
+#include <sys/stat.h>
+#include <sys/mman.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <syslog.h>
-#include <string.h>
-#include <unistd.h>
+#include <dirent.h>
 #include <signal.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <signal.h>
+#include <string.h>
+#include <utime.h>
+#include <fcntl.h>
+#include <syslog.h>
 
 off_t GetSize(char* path);
 mode_t GetChmod(char* path);
