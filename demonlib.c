@@ -43,7 +43,7 @@ char* compareCatalogs(char* sourcePath, char* targetPath)
 
 
 }
-void updateFile(char* sourcePath, char* targetPath, int treshold)
+void updateFile(char* sourcePath, char* targetPath, int threshold)
 {
     int sourceFile;
     int targetFile; 
@@ -60,7 +60,7 @@ void updateFile(char* sourcePath, char* targetPath, int treshold)
     ssize_t readSourceState;
     ssize_t writeTargetState;
     int size= getSize(char *sourcePath);
-    if ( size > treshold)
+    if ( size > threshold)
     {
        char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0)
        write(targetFile, map, size);
