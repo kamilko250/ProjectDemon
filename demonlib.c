@@ -43,7 +43,7 @@ char* compareCatalogs(char* sourcePath, char* targetPath)
 
 
 }
-void updateFile(char* sourcePath, char* targetPath)
+void updateFile(char* sourcePath, char* targetPath, int threshold)
 {
     int sourceFile;
     int targetFile; 
@@ -55,18 +55,30 @@ void updateFile(char* sourcePath, char* targetPath)
     {
         syslog(LOG_ERR, "Error while opening file %s", targetPath);
     }
+    
 
-    char* bufor[32];
-    ssize_t readSourceState;
-    ssize_t writeTargetState;
-
-    while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
+    if(getSize(sourcePath) >= threshold)
     {
-        writeTargetState = write(targetFile, bufor, readSourceState);
-        if(readSourceState != writeTargetState)
-        {
+        char* map = (char*)mmap(0, getSize(sourcePath) ,PROT_READ , MAP_SHARED | MAP_FILE, sourceFile, 0);
+        
+        write(targetFile, map, getSize(sourcePath));
             perror("Erorr while coping from %s to %s", sourcePath, targetPath);
             exit(EXIT_FAILURE);
+        
+    }
+1   else
+    {
+        char* bufor[32];
+        ssize_t readSourceState;
+        ssize_t writeTargetState;
+        while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
+        {
+            writeTargetState = write(targetFile, bufor, readSourceState);
+            if(readSourceState != writeTargetState)
+            {
+                perror("Erorr while coping from %s to %s", sourcePath, targetPath);
+                exit(EXIT_FAILURE);
+            }
         }
     }
     close(sourceFile);
