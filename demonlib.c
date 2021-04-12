@@ -43,7 +43,7 @@ char* compareCatalogs(char* sourcePath, char* targetPath)
 
 
 }
-void updateFile(char* sourcePath, char* targetPath, int threshold)
+void updateFile(char* sourcePath, char* targetPath, int treshold)
 {
     int sourceFile;
     int targetFile; 
@@ -51,35 +51,32 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     {
         syslog(LOG_ERR, "Error while opening file %s", sourcePath);
     }
-    if(sourceFile = open(targetPath, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU))
+    if(targetFile = open(targetPath, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU))
     {
         syslog(LOG_ERR, "Error while opening file %s", targetPath);
     }
-    
 
-    if(getSize(sourcePath) >= threshold)
+    char* bufor[32];
+    ssize_t readSourceState;
+    ssize_t writeTargetState;
+    int size= getSize(char *sourcePath);
+    if ( size > treshold)
     {
-        char* map = (char*)mmap(0, getSize(sourcePath) ,PROT_READ , MAP_SHARED | MAP_FILE, sourceFile, 0);
-        
-        write(targetFile, map, getSize(sourcePath));
-            perror("Erorr while coping from %s to %s", sourcePath, targetPath);
-            exit(EXIT_FAILURE);
-        
+       char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0)
+       write(targetFile, map, size);
+       munmap(map, size);
     }
-1   else
+    else
     {
-        char* bufor[32];
-        ssize_t readSourceState;
-        ssize_t writeTargetState;
-        while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
-        {
-            writeTargetState = write(targetFile, bufor, readSourceState);
-            if(readSourceState != writeTargetState)
-            {
-                perror("Erorr while coping from %s to %s", sourcePath, targetPath);
-                exit(EXIT_FAILURE);
-            }
-        }
+       while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
+       {
+           writeTargetState = write(targetFile, bufor, readSourceState);
+           if(readSourceState != writeTargetState)
+           {
+               perror("Error while coping from %s to %s", sourcePath, targetPath);
+               exit(EXIT_FAILURE);
+           }
+       }
     }
     close(sourceFile);
     close(targetFile);
@@ -88,6 +85,8 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     updateLastModFileTime(sourceFile, targetFile);
     syslog(LOG_INFO, "%s was copied", sourcePath);
 }
+
+
 int updateFileChmod(char* sourcePath, char* targetPath)
 {
     mode_t sourceChmod = getChmod(sourcePath);
@@ -106,5 +105,45 @@ int updateLastModFileTime(char* sourcePath, char* targetPath)
     {
         syslog(LOG_ERR, "Error while modifing time of last modification, file: %s", targetPath);
         exit(EXIT_FAILURE);
+    }
+}
+void delete(char* sourcePath, char* targetPath, bool recurSync)
+{
+    struct dirent* file;
+    DIR * path, *del;
+    path = opendir(targetPath);
+    while(( file = readdir (path)))
+    {
+        if((file->d_type)==DT_DIR)
+        {
+            if(recurSync)
+            {
+                if( !( strcmp(file->d_name, ".")== 0 || (file->d_name, "..")== 0))
+                {
+                    char* newPath = ;// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
+                    delete(newPath,targetPath, recurSync);
+                    char * pathToDelete = ; //ścieżka do danego pliku w target
+                    if(!(del=opendir(newPath))) 
+                    {
+                        remove(pathToDelete);
+                        syslog(LOG_INFO, "Deleted catalog %s", pathToDelete);
+                    }
+                    else
+                    {
+                        closedir(del);
+                    }
+                }
+            }
+        }
+        else
+        {
+            char* newPath = ;// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
+            if(access(newPath,F_OK)== -1 )
+            {
+                char* pathToDelete = ; //tutaj ścieżka do pliku w target (ten plik jest w source ale nie ma go w source, dlatego go usuwamy) na razie takie komenty żeby wiedziec na szybko co trzeba napisać później zakomentuję cały kod ładnie po ang. 
+                remove(pathToDelete);
+                syslog(LOG_INFO, "Deleted file %s", pathToDelete);
+            }
+        }
     }
 }
