@@ -20,7 +20,7 @@ void logHandler();
 //returns path to any difference
 char* compareCatalogs(char* sourcePath, char* targetPath);
 //updates content source->target 
-void updateFile(char* sourcePath, char* targetPath,int treshold);
+void updateFile(char* sourcePath, char* targetPath,int threshold);
 //sets time of last modification source->target 
 int updateLastModFileTime(char* sourcePath, char* targetPath);
 int updateFileChmod(char* sourcePath, char* targetPath);
