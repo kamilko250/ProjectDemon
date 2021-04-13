@@ -58,11 +58,10 @@ char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
                 if(targetStreamDirFile->d_type != DT_DIR)
                 {
                     char* sourceFilePath = pathToFile(sourcePath, sourceStreamDirFile->d_name);
-                    char* targetFilePath = strcat(targetPath, targetStreamDirFile->d_name);
 
                     if(!strcmp(sourceStreamDirFile->d_name, targetStreamDirFile->d_name))//znaleziony plik
                     {
-                        targetFilePath = strcat(targetFilePath, targetStreamDirFile->d_name);
+                        char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
                         if(getLastModificationTime(sourceFilePath) != getLastModificationTime(targetFilePath))//sprawdz date edycji 
                         {
                             truncate(targetFilePath, 0); //usun zawartosc pliku
@@ -73,7 +72,7 @@ char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
                     }
                     else//nie udalo sie znalezc pliku
                     {
-                        targetFilePath = strcat(targetFilePath, sourceStreamDirFile->d_name);
+                        char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
                         updateFile(sourceFilePath, targetFilePath, threshold); //utworz plik i skopiuj zawartosc
                         syslog(LOG_INFO, "File %s was created", targetFilePath);
                     }
@@ -162,9 +161,9 @@ void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
             {
                 if( !( strcmp(file->d_name, ".")== 0 || (file->d_name, "..")== 0))
                 {
-                    char* newPath = pathToFile(sourcePath, file->d_name);
+                    char* newPath = pathToFile(sourcePath, file->d_name);// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
                     delete(newPath,targetPath, recurSync);
-                    char * pathToDelete = changeCatalogs(newPath, sourcePath, targetPath);
+                    char * pathToDelete = changeCatalogs(newPath, sourcePath, targetPath); //ścieżka do danego pliku w target
                     if(!(del=opendir(newPath))) 
                     {
                         remove(pathToDelete);
@@ -179,17 +178,16 @@ void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
         }
         else
         {
-            char* newPath = pathToFile(sourcePath, file->d_name);
+            char* newPath = pathToFile(sourcePath, file->d_name);// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
             if(access(newPath,F_OK)== -1 )
             {
-                char* pathToDelete = changeCatalogs(newPath, sourcePath, targetPath);
+                char* pathToDelete = changeCatalogs(newPath, sourcePath, targetPath);; //tutaj ścieżka do pliku w target (ten plik jest w source ale nie ma go w source, dlatego go usuwamy) na razie takie komenty żeby wiedziec na szybko co trzeba napisać później zakomentuję cały kod ładnie po ang. 
                 remove(pathToDelete);
                 syslog(LOG_INFO, "Deleted file %s", pathToDelete);
             }
         }
     }
 }
-
 char* pathToFile(char* sourcePath, char* file)
 {
     char* newPath= malloc(strlen(sourcePath)+2+strlen(file));
