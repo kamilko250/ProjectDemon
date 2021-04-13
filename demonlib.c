@@ -36,10 +36,53 @@ void logHandler()
 {
     syslog(LOG_INFO, "Demon woke up - SIGUSR1");
 }
-char* compareCatalogs(char* sourcePath, char* targetPath)
+char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
 {
+    DIR* sourceDir = opendir(sourcePath);
+    DIR* targetDir = opendir(targetPath);
+    struct dirent sourceStreamDirFile;
+    struct dirent targetStreamDirFile;
+    char* startDir;
+    if(!(startDir = getcwd(NULL,0)))
+    {
+        perror("Error getcwd");
+        exit(EXIT_FAILURE);
+    }
+    while((sourceStreamDirFile = readdir(sourceDir)))
+    {
+        if(sourceStreamDirFile->d_type != DT_DIR)
+        {
+            opendir(targetPath);
+            while((targetStreamDirFile = readdir(targetDir)))
+            {
+                if(targetStreamDirFile->d_type != DT_DIR)
+                {
+                    char sourceFilePath[255] = strcat(sourcePath, "/");
+                    sourceFilePath = strcat(sourceFilePath, sourceStreamDirFile->d_name);
+                    char targetFilePath[255] = strcat(targetPath, "/");
 
-
+                    if(!strcmp(sourceStreamDirFile->d_name, targetStreamDirFile->d_name))//znaleziony plik
+                    {
+                        targetFilePath = strcat(targetFilePath, targetStreamDirFile->d_name);
+                        if(getLastModificationTime(sourceFilePath) != getLastModificationTime(targetFilePath))//sprawdz date edycji 
+                        {
+                            truncate(targetFilePath, 0); //usun zawartosc pliku
+                            updateFile(sourceFilePath, targetFilePath, threshold); //zrob kopiowanie 
+                            syslog(LOG_INFO, "File %s was updated", sourceFilePath);
+                            break;
+                        }
+                    }
+                    else//nie udalo sie znalezc pliku
+                    {
+                        targetFilePath = strcat(targetFilePath, sourceStreamDirFile->d_name);
+                        updateFile(sourceFilePath, targetFilePath, threshold); //utworz plik i skopiuj zawartosc
+                        syslog(LOG_INFO, "File %s was created", targetFilePath);
+                    }
+                }
+            }
+            closedir(targetStreamDirFile);
+        }
+    }
 
 
 }
@@ -107,7 +150,7 @@ int updateLastModFileTime(char* sourcePath, char* targetPath)
         exit(EXIT_FAILURE);
     }
 }
-void delete(char* sourcePath, char* targetPath, bool recurSync)
+void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
 {
     struct dirent* file;
     DIR * path, *del;
