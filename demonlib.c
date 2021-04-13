@@ -162,9 +162,9 @@ void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
             {
                 if( !( strcmp(file->d_name, ".")== 0 || (file->d_name, "..")== 0))
                 {
-                    char* newPath = ;// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
+                    char* newPath = pathToFile(sourcePath, file->d_name);
                     delete(newPath,targetPath, recurSync);
-                    char * pathToDelete = ; //ścieżka do danego pliku w target
+                    char * pathToDelete = changeCatalogs(newPath, sourcePath, targetPath);
                     if(!(del=opendir(newPath))) 
                     {
                         remove(pathToDelete);
@@ -179,13 +179,31 @@ void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
         }
         else
         {
-            char* newPath = ;// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
+            char* newPath = pathToFile(sourcePath, file->d_name);
             if(access(newPath,F_OK)== -1 )
             {
-                char* pathToDelete = ; //tutaj ścieżka do pliku w target (ten plik jest w source ale nie ma go w source, dlatego go usuwamy) na razie takie komenty żeby wiedziec na szybko co trzeba napisać później zakomentuję cały kod ładnie po ang. 
+                char* pathToDelete = changeCatalogs(newPath, sourcePath, targetPath);
                 remove(pathToDelete);
                 syslog(LOG_INFO, "Deleted file %s", pathToDelete);
             }
         }
     }
+}
+
+char* pathToFile(char* sourcePath, char* file)
+{
+    char* newPath= malloc(strlen(sourcePath)+2+strlen(file));
+    strcpy(newPath,sourcePath);
+    strcat(newPath,"/");
+    strcat(newPath, file);
+    newPath[strlen(sourcePath)+1+strlen(file)]='\0';
+    return newPath;
+}
+char* changeCatalogs(char* newPath, char* sourcePath, char* targetPath)
+{
+    char* path = newPath+strlen(sourcePath);
+    char* outPath = malloc(strlen(targetPath)+strlen(path)+2);
+    strcpy(outPath,targetPath);
+    strcat(outPath,path);
+    return outPath;
 }
