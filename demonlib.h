@@ -17,8 +17,10 @@ mode_t getChmod(char* path);
 time_t getLastModificationTime(char* path);
 time_t getLastAccesTime(char* path);
 void logHandler();
-//returns path to any difference
-char* compareCatalogs(char* sourcePath, char* targetPath);
+//compare and delete target
+void clearCatalogs(char* sourcePath, char* targetPath);
+//compare and fill target 
+void refillCatalogs(char* sourcePath, char* targetPath, int threshold);
 //updates content source->target 
 void updateFile(char* sourcePath, char* targetPath,int threshold);
 //sets time of last modification source->target 
