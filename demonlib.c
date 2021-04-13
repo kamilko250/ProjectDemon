@@ -57,9 +57,8 @@ char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
             {
                 if(targetStreamDirFile->d_type != DT_DIR)
                 {
-                    char sourceFilePath[255] = strcat(sourcePath, "/");
-                    sourceFilePath = strcat(sourceFilePath, sourceStreamDirFile->d_name);
-                    char targetFilePath[255] = strcat(targetPath, "/");
+                    char* sourceFilePath = pathToFile(sourcePath, sourceStreamDirFile->d_name);
+                    char* targetFilePath = strcat(targetPath, targetStreamDirFile->d_name);
 
                     if(!strcmp(sourceStreamDirFile->d_name, targetStreamDirFile->d_name))//znaleziony plik
                     {
