@@ -18,9 +18,10 @@ mode_t getChmod(char* path)
 }
 time_t getLastModificationTime(char* path)
 {
+    
     struct stat lastModTime;
     if(!stat(path, &lastModTime))
-        return lastModTime.st_mtim;
+        return (time_t)lastModTime.st_mtim.tv_sec;
     syslog(LOG_ERR, "Error while getting last modification time, file: %s", path);
     exit(EXIT_FAILURE);
 }
@@ -28,7 +29,7 @@ time_t getLastAccesTime(char* path)
 {
     struct  stat lastAccesTime;
     if(!stat(path, &lastAccesTime))
-        return lastAccesTime.st_atim;
+        return (time_t)lastAccesTime.st_atim.tv_sec;
     syslog(LOG_ERR, "Error while getting last access time, file %s", path);
     exit(EXIT_FAILURE);   
 }
@@ -40,8 +41,8 @@ char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
 {
     DIR* sourceDir = opendir(sourcePath);
     DIR* targetDir = opendir(targetPath);
-    struct dirent sourceStreamDirFile;
-    struct dirent targetStreamDirFile;
+    struct dirent* sourceStreamDirFile;
+    struct dirent* targetStreamDirFile;
     char* startDir;
     if(!(startDir = getcwd(NULL,0)))
     {
@@ -78,11 +79,10 @@ char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
                     }
                 }
             }
-            closedir(targetStreamDirFile);
+            closedir(targetDir);
         }
     }
-
-
+    closedir(sourceDir);
 }
 void updateFile(char* sourcePath, char* targetPath, int threshold)
 {
@@ -100,10 +100,10 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     char* bufor[32];
     ssize_t readSourceState;
     ssize_t writeTargetState;
-    int size= getSize(char *sourcePath);
-    if ( size > threshold)
+    int size = getSize (sourcePath);
+    if (size > threshold)
     {
-       char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0)
+       char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0);
        write(targetFile, map, size);
        munmap(map, size);
     }
@@ -114,7 +114,7 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
            writeTargetState = write(targetFile, bufor, readSourceState);
            if(readSourceState != writeTargetState)
            {
-               perror("Error while coping from %s to %s", sourcePath, targetPath);
+               syslog(LOG_ERR,"Error while coping from %s to %s",sourcePath, targetPath);
                exit(EXIT_FAILURE);
            }
        }
@@ -122,8 +122,8 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     close(sourceFile);
     close(targetFile);
 
-    updateFileChmod(sourcePath, targetFile);
-    updateLastModFileTime(sourceFile, targetFile);
+    updateFileChmod(sourcePath, targetPath);
+    updateLastModFileTime(sourcePath, targetPath);
     syslog(LOG_INFO, "%s was copied", sourcePath);
 }
 
@@ -162,7 +162,7 @@ void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync)
                 if( !( strcmp(file->d_name, ".")== 0 || (file->d_name, "..")== 0))
                 {
                     char* newPath = pathToFile(sourcePath, file->d_name);// tutaj ścieżka do danego pliku w source (tego pliku może nie być właśnie to będziemy sprawdzać)
-                    delete(newPath,targetPath, recurSync);
+                    clearCatalogs(newPath,targetPath, recurSync);
                     char * pathToDelete = changeCatalogs(newPath, sourcePath, targetPath); //ścieżka do danego pliku w target
                     if(!(del=opendir(newPath))) 
                     {
