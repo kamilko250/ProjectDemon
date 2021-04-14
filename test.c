@@ -20,7 +20,7 @@ int main()
     printf("%g\n",data_modyfikacji_);
     */
    //nie jestem pewien czy dziala poprawnie
-   //probowalem wyswietlic czas w bardziej czytelnej formie niz ciag cyfr metoda ze StackOverflow ale puki co bez zalozonego skutku
+   //probowalem wyswietlic czas w bardziej czytelnej formie niz ciag cyfr metoda ze StackOverflow ale póki co bez zalozonego skutku
    
    //==================================================================
    printf("test_pathToFile:\n");
