@@ -39,28 +39,28 @@ void logHandler()
 }
 void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync)
 {
-    printf("compare");
     DIR* sourceDir = opendir(sourcePath);
-    DIR* targetDir = opendir(targetPath);
+    DIR* targetDir;
     struct dirent* sourceStreamDirFile;
     struct dirent* targetStreamDirFile;
-    printf("deklaracje");
     
     while((sourceStreamDirFile = readdir(sourceDir)))
     {
         if(sourceStreamDirFile->d_type != DT_DIR)
         {
-            printf("%d", sourceStreamDirFile->d_type);
-            printf("%s", targetPath);
-            opendir(targetPath);
+            printf("%s\n", targetPath);
+            targetDir = opendir(targetPath);
+            printf("%d\n", targetDir);
             while((targetStreamDirFile = readdir(targetDir)))
             {
+                printf("%c",targetStreamDirFile->d_type);
                 if(targetStreamDirFile->d_type != DT_DIR)
                 {
                     char* sourceFilePath = pathToFile(sourcePath, sourceStreamDirFile->d_name);
 
                     if(!strcmp(sourceStreamDirFile->d_name, targetStreamDirFile->d_name))//znaleziony plik
                     {
+                        printf("znaleziony plik");
                         char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
                         if(getLastModificationTime(sourceFilePath) != getLastModificationTime(targetFilePath))//sprawdz date edycji 
                         {
@@ -72,6 +72,7 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
                     }
                     else//nie udalo sie znalezc pliku
                     {
+                        printf("plik nieznaleziony");
                         char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
                         updateFile(sourceFilePath, targetFilePath, threshold); //utworz plik i skopiuj zawartosc
                         syslog(LOG_INFO, "File %s was created", targetFilePath);
@@ -125,8 +126,6 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     updateLastModFileTime(sourcePath, targetPath);
     syslog(LOG_INFO, "%s was copied", sourcePath);
 }
-
-
 int updateFileChmod(char* sourcePath, char* targetPath)
 {
     mode_t sourceChmod = getChmod(sourcePath);

@@ -58,16 +58,10 @@ void test_compareCatalogs()
 {
     //=================================================================
     printf("test_compareCatalogs:\n");
-    printf("1");
-    char* source = "/source";
-
-    printf("2");
-    char* target = "/target";
-
-    printf("3");
+    char* source = "source";
+    char* target = "target";
     bool recu = false;
-
     int treshold = 500;
     compareCatalogs(source, target, treshold, recu);
-    printf("wynik: ");
+    printf("wynik: \n");
 }
