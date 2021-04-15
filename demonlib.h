@@ -29,3 +29,5 @@ int updateLastModFileTime(char* sourcePath, char* targetPath);
 int updateFileChmod(char* sourcePath, char* targetPath);
 char* pathToFile(char* sourcePath, char* file);
 char* changeCatalogs(char* newPath, char* sourcePath, char* targetPath);
+bool isFileUpToDate(char* sourceFilePath, char* targetFilePath);
+bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePath, char* targetFilePath, int threshold);

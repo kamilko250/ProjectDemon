@@ -37,6 +37,28 @@ void logHandler()
 {
     syslog(LOG_INFO, "Demon woke up - SIGUSR1");
 }
+bool isFileUpToDate(char* sourceFilePath, char* targetFilePath)
+{
+    if(getLastModificationTime(sourceFilePath) == getLastModificationTime(targetFilePath))
+        return true;
+    else
+        return false;
+    
+}
+bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePath, char* targetFilePath, int threshold)
+{
+    if(!strcmp(fileNameTarget, fileNameSource))
+    {
+        if(!isFileUpToDate(sourceFilePath, targetFilePath))
+        {
+            truncate(targetFilePath, 0); 
+            //updateFile(sourceFilePath, targetFilePath, threshold);
+            syslog(LOG_INFO, "File %s was updated\n", sourceFilePath);
+        }
+        return true;
+    }
+    return false;
+}
 void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync)
 {
     DIR* sourceDir = opendir(sourcePath);
@@ -48,40 +70,44 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
     {
         if(sourceStreamDirFile->d_type != DT_DIR)
         {
-            printf("%s\n", targetPath);
+            char* fileNameSource = sourceStreamDirFile->d_name;
+            printf("petla zewnetrzna - source: %s\n",fileNameSource);
             targetDir = opendir(targetPath);
-            printf("%d\n", targetDir);
-            while((targetStreamDirFile = readdir(targetDir)))
+            do
             {
-                printf("%c",targetStreamDirFile->d_type);
-                if(targetStreamDirFile->d_type != DT_DIR)
+                targetStreamDirFile = readdir(targetDir);
+                if(targetStreamDirFile)//znaleziono plik w folderze
                 {
-                    char* sourceFilePath = pathToFile(sourcePath, sourceStreamDirFile->d_name);
-
-                    if(!strcmp(sourceStreamDirFile->d_name, targetStreamDirFile->d_name))//znaleziony plik
+                    char* fileNameTarget = targetStreamDirFile->d_name;
+                    unsigned char fileType = targetStreamDirFile->d_type;
+                    printf("petlwa wewnetrzna - target: %s\n", fileNameTarget);
+                    if(fileType != DT_DIR)
                     {
-                        printf("znaleziony plik");
-                        char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
-                        if(getLastModificationTime(sourceFilePath) != getLastModificationTime(targetFilePath))//sprawdz date edycji 
+                        printf("typ pliku zgodny\n");
+                        char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
+                        char* targetFilePath = pathToFile(targetPath, fileNameTarget);
+                        
+                        if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
                         {
-                            truncate(targetFilePath, 0); //usun zawartosc pliku
-                            updateFile(sourceFilePath, targetFilePath, threshold); //zrob kopiowanie 
-                            syslog(LOG_INFO, "File %s was updated", sourceFilePath);
+                            printf("plik %s zsynchronizowany\n", sourceFilePath);
                             break;
                         }
-                    }
-                    else//nie udalo sie znalezc pliku
-                    {
-                        printf("plik nieznaleziony");
-                        char* targetFilePath = pathToFile(targetPath, targetStreamDirFile->d_name);
-                        updateFile(sourceFilePath, targetFilePath, threshold); //utworz plik i skopiuj zawartosc
-                        syslog(LOG_INFO, "File %s was created", targetFilePath);
+                        printf("nie odpowiedni plik\n");
                     }
                 }
-            }
+                else//folder jest pusty
+                {
+                    printf("nic nie znaleziono\n");
+                    char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
+                    char* targetFilePath = pathToFile(targetPath, fileNameSource);
+                    updateFile(sourceFilePath, targetFilePath, threshold);
+                    break;
+                }
+            }while(true);
             closedir(targetDir);
         }
     }
+    printf("wszystkie pliki zsynchronizowane\n");
     closedir(sourceDir);
 }
 void updateFile(char* sourcePath, char* targetPath, int threshold)
