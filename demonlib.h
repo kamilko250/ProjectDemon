@@ -19,7 +19,7 @@ time_t getLastAccesTime(char* path);
 void logHandler();
 //compare and delete target
 //void clearCatalogs(char* sourcePath, char* targetPath);
-void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync);
+void clearCatalogs(char* sourcePath, char* targetPath,char* currentFile ,bool recurSync);
 //compare and fill target 
 void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync);
 //updates content source->target 
@@ -28,6 +28,6 @@ void updateFile(char* sourcePath, char* targetPath,int threshold);
 int updateLastModFileTime(char* sourcePath, char* targetPath);
 int updateFileChmod(char* sourcePath, char* targetPath);
 char* pathToFile(char* sourcePath, char* file);
-char* changeCatalogs(char* newPath, char* sourcePath, char* targetPath);
+char* changeCatalogs(char* newPath, char* sourcePath);
 bool isFileUpToDate(char* sourceFilePath, char* targetFilePath);
 bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePath, char* targetFilePath, int threshold);
