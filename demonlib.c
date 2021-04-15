@@ -37,22 +37,21 @@ void logHandler()
 {
     syslog(LOG_INFO, "Demon woke up - SIGUSR1");
 }
-char* compareCatalogs(char* sourcePath, char* targetPath, int threshold)
+void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync)
 {
+    printf("compare");
     DIR* sourceDir = opendir(sourcePath);
     DIR* targetDir = opendir(targetPath);
     struct dirent* sourceStreamDirFile;
     struct dirent* targetStreamDirFile;
-    char* startDir;
-    if(!(startDir = getcwd(NULL,0)))
-    {
-        perror("Error getcwd");
-        exit(EXIT_FAILURE);
-    }
+    printf("deklaracje");
+    
     while((sourceStreamDirFile = readdir(sourceDir)))
     {
         if(sourceStreamDirFile->d_type != DT_DIR)
         {
+            printf("%d", sourceStreamDirFile->d_type);
+            printf("%s", targetPath);
             opendir(targetPath);
             while((targetStreamDirFile = readdir(targetDir)))
             {

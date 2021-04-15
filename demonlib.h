@@ -21,7 +21,7 @@ void logHandler();
 //void clearCatalogs(char* sourcePath, char* targetPath);
 void clearCatalogs(char* sourcePath, char* targetPath, bool recurSync);
 //compare and fill target 
-void refillCatalogs(char* sourcePath, char* targetPath, int threshold);
+void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync);
 //updates content source->target 
 void updateFile(char* sourcePath, char* targetPath,int threshold);
 //sets time of last modification source->target 
