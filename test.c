@@ -8,6 +8,9 @@ void test_changeCatalogs();
 void test_pathToFile();
 void test_compareCatalogs();
 void test_compareFiles();
+void test_getLastAccesTime();
+void test_updateFile();
+
 
 int main()
 {
@@ -17,9 +20,38 @@ int main()
     //test_changeCatalogs();
     test_compareFiles();
     //test_compareCatalogs();
+    //test_getLastAccesTime();
+    //test_updateFile();
+    
+    //=======================================================================
+    //test_compareCatalogs();
+    //w momencie gdy zawartosc source i target sa identyczne, wyrzuca jednoczesnie komunikat, ze znaleziono i nieznaleziono plik
+    //nie dziala gdy plik target jest pusty (nie wypisuje nic)
+    //kiedy w target oba pliki sie zgadzaja, ale jest jeszcze jakis dodatkowy, funkcja wypisuje to samo co w przypadku 2 zgodnych, nie wiem czy tu dziala dobrze czy komunikat wynika z tego samego bledu co przy identycznych katalogach
+    //gdy jeden plik w target sie zgadza a inny nie lub gdy w target znajduje sie inny plik, dziala poprawnie
+    //gdy pliki w obu katalogach jest po jednym pliku i sa identyczne, funkcja dziala poprawnie
+
+    //PODSUMOAWNIE: Nie dziala gdy w target jest pusty, gdy w targecie jest wiecej niz jeden plik (identyczny z tymi w source)
+    //UWAGA!!! Raz funkcja uszkodzila plik w katalogu target, powod nieznany
+    //=======================================================================
 
 
     return 0;
+}
+void test_updateFile()
+{
+    printf("test_getLastAccesTime (btw Access pisze sie z 2 s ;):\n");
+    updateFile("source/a.txt","target/a.txt",100);
+    //funkcja zmienia zawartosc pliku w katalogu target np a.txt na taka z pliku w katalogu source
+    //dziala poprawnie
+}
+void test_getLastAccesTime()
+{
+    printf("test_getLastAccesTime (btw Access pisze sie z 2 s ;):\n");
+    time_t at;
+    at=getLastAccesTime("/home/michal/Documents/ProjectDemon/source/a.txt");
+    printf("%ld\n", at);
+    //dziala poprawnie
 }
 void test_getSize()
 {
