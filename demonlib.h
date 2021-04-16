@@ -32,3 +32,4 @@ char* pathToFile(char* sourcePath, char* file);
 char* changeCatalogs(char* newPath, char* sourcePath);
 bool isFileUpToDate(char* sourceFilePath, char* targetFilePath);
 bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePath, char* targetFilePath, int threshold);
+bool isCatalogExist(char* sourceCatalogName, char* targetDirectory);

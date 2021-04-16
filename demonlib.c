@@ -52,19 +52,14 @@ bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePa
         printf("        Names are equal.\n");
         if(!isFileUpToDate(sourceFilePath, targetFilePath))
         {
-            printf("        File need to be updated.\n");
+            printf("        File updating.\n");
             truncate(targetFilePath, 0); 
-            printf("        updateFile: \n");
-            printf("        Source file: %s\n", sourceFilePath);
-            printf("        Targer file: %s\n", targetFilePath);
-            printf("        FileNameSource: %s\n", fileNameSource);
-            printf("        FileNameTarget: %s\n", fileNameTarget);
             updateFile(sourceFilePath, targetFilePath, threshold);
             syslog(LOG_INFO, "File %s was updated\n", sourceFilePath);
         }
         else
         {
-            printf("        File is up to date.\n");
+            printf("        File updated.\n");
         }
         return true;
     }
@@ -93,19 +88,18 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
                 {
                     char* fileNameTarget = targetStreamDirFile->d_name;
                     unsigned char fileType = targetStreamDirFile->d_type;
-                    printf("    Found file: %s.\n", fileNameTarget);
-                    if(fileType != DT_DIR)
+                    if(!strcmp(fileNameTarget, ".") || !strcmp(fileNameTarget, "..") && fileType == DT_DIR)
                     {
-                        printf("        File isn't a directory.\n");
-                        char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
-                        char* targetFilePath = pathToFile(targetPath, fileNameSource);
-                        
+                        continue;
+                    }
+                    printf("    Found file: %s.\n", fileNameTarget);
+                    char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
+                    char* targetFilePath = pathToFile(targetPath, fileNameSource);
 
-                        if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
-                        {
-                            printf("    File %s is synchronized.\n", sourceFilePath);
-                            break;
-                        }
+                    if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
+                    {
+                        printf("        File %s is synchronized.\n", sourceFilePath);
+                        break;
                     }
                 }
                 else//folder jest pusty
@@ -119,8 +113,34 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
             }while(true);
             closedir(targetDir);
         }
+        else if(recurSync == true && sourceStreamDirFile->d_type == DT_DIR)
+        {
+            char* dirName = sourceStreamDirFile->d_name;
+            if(strcmp(dirName, ".") && strcmp(dirName, ".."))
+            {
+                printf("Directiory to synchronize: %s.\n", sourceStreamDirFile->d_name);
+                char* newDirSourcePath = pathToFile(sourcePath, dirName);
+                char* newDirTargetPath = pathToFile(targetPath, dirName);
+                if(isCatalogExist(dirName,targetPath))
+                {
+                    printf("Catalog does exists in target directory.\n");
+                }
+                else
+                {
+                    printf("Catalog doesn't exist in target dirctory.\n");
+                    printf("Creating catalog...\n");
+                    if(mkdir(newDirTargetPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+                    {
+                        printf("Error while mkdir: %s.\n", newDirTargetPath);
+                        syslog(LOG_ERR, "Error while mkdir: %s", newDirTargetPath);
+                        exit(EXIT_FAILURE);
+                    }        
+                }
+                compareCatalogs(newDirSourcePath, newDirTargetPath, threshold, recurSync);
+            }
+        }
     }
-    printf("All files synchronized.\n");
+    printf("All files synchronized in directory %s.\n", sourcePath);
     closedir(sourceDir);
 }
 void updateFile(char* sourcePath, char* targetPath, int threshold)
@@ -161,7 +181,7 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
             if(readSourceState != writeTargetState)
             {
                 syslog(LOG_ERR,"Error while coping from %s to %s",sourcePath, targetPath);
-                printf("    Error while coping from %s to %s.", sourcePath, targetPath);
+                printf("    Error while coping from %s to %s.\n", sourcePath, targetPath);
                 exit(EXIT_FAILURE);
             }
         }
@@ -257,4 +277,19 @@ char* changeCatalogs(char* newPath, char* sourcePath)
     strcpy(outPath,sourcePath);
     strcat(outPath,path);
     return outPath;
+}
+bool isCatalogExist(char* sourceCatalogName, char* targetDirectory)
+{
+    DIR* directory = opendir(targetDirectory);
+    struct dirent* file;  
+    while(file = readdir(directory))
+    {
+        if(!strcmp(sourceCatalogName, file->d_name) && file->d_type == DT_DIR)
+        {
+            closedir(directory);
+            return true;
+        }
+    } 
+    closedir(directory);
+    return false;
 }
