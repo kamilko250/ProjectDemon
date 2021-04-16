@@ -7,6 +7,7 @@ void test_getLastModTime();
 void test_changeCatalogs();
 void test_pathToFile();
 void test_compareCatalogs();
+void test_compareFiles();
 
 int main()
 {
@@ -14,7 +15,8 @@ int main()
     //test_getLastModTime();
     //test_pathToFile();
     //test_changeCatalogs();
-    test_compareCatalogs();
+    test_compareFiles();
+    //test_compareCatalogs();
 
 
     return 0;
@@ -64,4 +66,14 @@ void test_compareCatalogs()
     int treshold = 500;
     compareCatalogs(source, target, treshold, recu);
     printf("wynik: \n");
+}
+void test_compareFiles()
+{
+    printf("test_compareFiles\n");
+    char* fileNameSource = "source/b.txt";
+    char* fileNameTarget = "target/b.txt";
+    char* sourceFilePath = "b.txt";
+    char* targetFilePath = "b.txt";
+    int threshold;
+    compareFiles(fileNameSource,fileNameTarget, sourceFilePath, targetFilePath, threshold);
 }

@@ -52,7 +52,12 @@ bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePa
         if(!isFileUpToDate(sourceFilePath, targetFilePath))
         {
             truncate(targetFilePath, 0); 
-            //updateFile(sourceFilePath, targetFilePath, threshold);
+            printf("updateFile: \n");
+            printf("    source file: %s\n", sourceFilePath);
+            printf("    targer file: %s\n", targetFilePath);
+            printf("    fileNameSource: %s\n", fileNameSource);
+            printf("    fileNameTarget: %s\n", fileNameTarget);
+            updateFile(sourceFilePath, targetFilePath, threshold);
             syslog(LOG_INFO, "File %s was updated\n", sourceFilePath);
         }
         return true;
@@ -85,8 +90,9 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
                     {
                         printf("typ pliku zgodny\n");
                         char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
-                        char* targetFilePath = pathToFile(targetPath, fileNameTarget);
+                        char* targetFilePath = pathToFile(targetPath, fileNameSource);
                         
+
                         if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
                         {
                             printf("plik %s zsynchronizowany\n", sourceFilePath);
