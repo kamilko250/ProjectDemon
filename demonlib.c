@@ -49,19 +49,26 @@ bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePa
 {
     if(!strcmp(fileNameTarget, fileNameSource))
     {
+        printf("        Names are equal.\n");
         if(!isFileUpToDate(sourceFilePath, targetFilePath))
         {
+            printf("        File need to be updated.\n");
             truncate(targetFilePath, 0); 
-            printf("updateFile: \n");
-            printf("    source file: %s\n", sourceFilePath);
-            printf("    targer file: %s\n", targetFilePath);
-            printf("    fileNameSource: %s\n", fileNameSource);
-            printf("    fileNameTarget: %s\n", fileNameTarget);
+            printf("        updateFile: \n");
+            printf("        Source file: %s\n", sourceFilePath);
+            printf("        Targer file: %s\n", targetFilePath);
+            printf("        FileNameSource: %s\n", fileNameSource);
+            printf("        FileNameTarget: %s\n", fileNameTarget);
             updateFile(sourceFilePath, targetFilePath, threshold);
             syslog(LOG_INFO, "File %s was updated\n", sourceFilePath);
         }
+        else
+        {
+            printf("        File is up to date.\n");
+        }
         return true;
     }
+    printf("        Names are not equal.\n");
     return false;
 }
 void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync)
@@ -76,8 +83,9 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
         if(sourceStreamDirFile->d_type != DT_DIR)
         {
             char* fileNameSource = sourceStreamDirFile->d_name;
-            printf("petla zewnetrzna - source: %s\n",fileNameSource);
+            printf("Updating file: %s.\n",fileNameSource);
             targetDir = opendir(targetPath);
+            printf("    Looking for files in target directory.\n");
             do
             {
                 targetStreamDirFile = readdir(targetDir);
@@ -85,25 +93,24 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
                 {
                     char* fileNameTarget = targetStreamDirFile->d_name;
                     unsigned char fileType = targetStreamDirFile->d_type;
-                    printf("petlwa wewnetrzna - target: %s\n", fileNameTarget);
+                    printf("    Found file: %s.\n", fileNameTarget);
                     if(fileType != DT_DIR)
                     {
-                        printf("typ pliku zgodny\n");
+                        printf("        File isn't a directory.\n");
                         char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
                         char* targetFilePath = pathToFile(targetPath, fileNameSource);
                         
 
                         if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
                         {
-                            printf("plik %s zsynchronizowany\n", sourceFilePath);
+                            printf("    File %s is synchronized.\n", sourceFilePath);
                             break;
                         }
-                        printf("nie odpowiedni plik\n");
                     }
                 }
                 else//folder jest pusty
                 {
-                    printf("nic nie znaleziono\n");
+                    printf("    File doesn't exist.\n");
                     char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
                     char* targetFilePath = pathToFile(targetPath, fileNameSource);
                     updateFile(sourceFilePath, targetFilePath, threshold);
@@ -113,20 +120,24 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
             closedir(targetDir);
         }
     }
-    printf("wszystkie pliki zsynchronizowane\n");
+    printf("All files synchronized.\n");
     closedir(sourceDir);
 }
 void updateFile(char* sourcePath, char* targetPath, int threshold)
 {
-    int sourceFile;
-    int targetFile; 
-    if(sourceFile = open(sourcePath, O_RDONLY))
+    int sourceFile = open(sourcePath, O_RDONLY);
+    int targetFile = open(targetPath, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU); 
+    if(!sourceFile)
     {
-        syslog(LOG_ERR, "Error while opening file %s", sourcePath);
+        syslog(LOG_ERR, "Error while opening file %s.", sourcePath);
+        printf("    Error while opening file %s.\n", sourcePath);
+        exit(EXIT_FAILURE);
     }
-    if(targetFile = open(targetPath, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU))
+    if(!targetFile)
     {
-        syslog(LOG_ERR, "Error while opening file %s", targetPath);
+        syslog(LOG_ERR, "Error while opening file %s.", targetPath);
+        printf("    Error while opening file %s.\n", targetPath);
+        exit(EXIT_FAILURE);
     }
 
     char* bufor[32];
@@ -135,35 +146,44 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     int size = getSize (sourcePath);
     if (size > threshold)
     {
-       char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0);
-       write(targetFile, map, size);
-       munmap(map, size);
+        printf("    Mapping...");
+        char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0);
+        write(targetFile, map, size);
+        munmap(map, size);
+        printf("    Mapping complete!");
     }
     else
     {
-       while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
-       {
-           writeTargetState = write(targetFile, bufor, readSourceState);
-           if(readSourceState != writeTargetState)
-           {
-               syslog(LOG_ERR,"Error while coping from %s to %s",sourcePath, targetPath);
-               exit(EXIT_FAILURE);
-           }
-       }
+        printf("    Just coping...\n");
+        while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
+        {
+            writeTargetState = write(targetFile, bufor, readSourceState);
+            if(readSourceState != writeTargetState)
+            {
+                syslog(LOG_ERR,"Error while coping from %s to %s",sourcePath, targetPath);
+                printf("    Error while coping from %s to %s.", sourcePath, targetPath);
+                exit(EXIT_FAILURE);
+            }
+        }
     }
+    printf("    Closing files...\n");
     close(sourceFile);
     close(targetFile);
-
+    printf("    FileChmod updating...\n");
     updateFileChmod(sourcePath, targetPath);
+    printf("    FileCHmod updated.\n");
+    printf("    LastModFileTime updating...\n");
     updateLastModFileTime(sourcePath, targetPath);
+    printf("    LastModFileTime updated.\n");
     syslog(LOG_INFO, "%s was copied", sourcePath);
 }
 int updateFileChmod(char* sourcePath, char* targetPath)
 {
     mode_t sourceChmod = getChmod(sourcePath);
-    if(!chmod(sourcePath, sourceChmod)) 
+    if(chmod(targetPath, sourceChmod)) 
     {
         syslog(LOG_ERR, "Error while changing chmod, file: %s", targetPath);
+        printf("Error while changing chmod, file: %s\n %d %s\n", targetPath, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -172,7 +192,7 @@ int updateLastModFileTime(char* sourcePath, char* targetPath)
     struct utimbuf time;
     time.actime = getLastAccesTime(sourcePath);
     time.modtime = getLastModificationTime(sourcePath);
-    if(!utime(targetPath, &time))
+    if(utime(targetPath, &time))
     {
         syslog(LOG_ERR, "Error while modifing time of last modification, file: %s", targetPath);
         exit(EXIT_FAILURE);

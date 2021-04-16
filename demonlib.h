@@ -11,6 +11,7 @@
 #include <utime.h>
 #include <fcntl.h>
 #include <syslog.h>
+#include <errno.h>
 
 off_t getSize(char* path);
 mode_t getChmod(char* path);

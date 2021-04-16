@@ -18,8 +18,8 @@ int main()
     //test_getLastModTime();
     //test_pathToFile();
     //test_changeCatalogs();
-    test_compareFiles();
-    //test_compareCatalogs();
+    //test_compareFiles();
+    test_compareCatalogs();
     //test_getLastAccesTime();
     //test_updateFile();
     
@@ -83,9 +83,9 @@ void test_changeCatalogs()
 {
     //==================================================================
     printf("test_changeCatalogs:\n");
-    char *_outpath=changeCatalogs("source/a.txt","/source","/target");
+    char *_outpath=changeCatalogs("/target", "source/a.txt");
     printf("%s\n",_outpath);
-    //przykladowe dzialanie: dla powyzszych parametrow tworzy nowa sciezke "/home/michal/Documents/ProjectDemon/target/a.txt"
+    //przykladowe dzialanie: dla powyzszych parametrow tworzy nowa sciezke "target/a.txt"
     //dziala
 }
 void test_compareCatalogs()
@@ -97,15 +97,14 @@ void test_compareCatalogs()
     bool recu = false;
     int treshold = 500;
     compareCatalogs(source, target, treshold, recu);
-    printf("wynik: \n");
 }
 void test_compareFiles()
 {
     printf("test_compareFiles\n");
-    char* fileNameSource = "source/b.txt";
-    char* fileNameTarget = "target/b.txt";
-    char* sourceFilePath = "b.txt";
-    char* targetFilePath = "b.txt";
+    char* fileNameSource = "b.txt";
+    char* fileNameTarget = "b.txt";
+    char* sourceFilePath = "source/b.txt";
+    char* targetFilePath = "target/b.txt";
     int threshold;
     compareFiles(fileNameSource,fileNameTarget, sourceFilePath, targetFilePath, threshold);
 }
