@@ -1,10 +1,3 @@
-/*#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <syslog.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>*/
 #include <sys/types.h>
 #include "demonlib.h"
 
@@ -17,6 +10,7 @@ int main(int argc, char** argv)
     bool recurSync = false;
     int threshold = 4096;
     int sleepTimeSeconds = 5 * 60;
+    struct stat file;
     if(argc<5)
     {
         printf("Too few args\n");
@@ -27,12 +21,30 @@ int main(int argc, char** argv)
 
     pid_t ProcessID, SessionID;
 
-    // pid_t itd...
+    ProcessID = fork();
+    printf("ProcessID %d\n", ProcessID);
+    if(ProcessID<0)
+    {
+        syslog(LOG_ERR, "Wrong child ID");
+        printf("Wrong child ID");
+        exit(EXIT_FAILURE);
+    }
+    else if(ProcessID>0)
+    {
+        //exit(EXIT_SUCCESS);
+    }
 
+    umask(0);
 
-
-
-
+    SessionID = setsid();
+    printf("SessionID %d\n", SessionID);
+    if(SessionID<0)
+    {
+        syslog(LOG_ERR, "Wrong SessionID");
+        printf("Wrong SessionID");
+        exit(EXIT_FAILURE);
+    }
+    printf("Przed whilem");
     int parameter;
     while((parameter = getopt(argc, argv, "i:o:t:y:r")) != -1)
     {
@@ -40,15 +52,38 @@ int main(int argc, char** argv)
         {
             case 'i': 
             {   
-                sourcePath = optarg;
-                //sprawdzenie sciezki
+                char* check = optarg;
+                if(stat(check, &file) == 0)
+                {
+                    if(file.st_mode &S_IFDIR)
+                    {
+                        sourcePath = optarg;
+                    }
+                    else
+                    {
+                        syslog(LOG_ERR, "Not a source folder");
+                        printf("Not a source folder");
+                        exit(EXIT_FAILURE);
+                    }
+                }
                 break;
             }
             case 'o':
             {
-                targetPath = optarg;
-                //sprawdzenie sciezki
-                break;
+               char* check = optarg;
+                if(stat(check, &file) == 0)
+                {
+                    if(file.st_mode &S_IFDIR)
+                    {
+                        targetPath = optarg;
+                    }
+                    else
+                    {
+                        syslog(LOG_ERR, "Not a target folder");
+                        printf("Not a target folder");
+                        exit(EXIT_FAILURE);
+                    }
+                }
             }
             case 't':
             {
@@ -72,9 +107,11 @@ int main(int argc, char** argv)
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     syslog(LOG_INFO, "Synchro-Demon");
-    if(signal(SIGUSR1, LogHandler())==SIG_ERR)
+    printf("Synchro-Demon");
+    if(signal(SIGUSR1, logHandler)==SIG_ERR)
     {
         syslog(LOG_ERR, "Signal Error!");
+        printf("Signal Error");
         exit(EXIT_FAILURE);
     }
 
@@ -82,12 +119,15 @@ int main(int argc, char** argv)
     {
         clearCatalogs(sourcePath, targetPath, targetPath, recurSync);
         compareCatalogs(sourcePath, targetPath, threshold, recurSync);
-        //czesc wlasciwa demona
-
+        syslog(LOG_INFO, "Demon has gone to sleep");
+        printf( "Demon has gone to sleep");
+        if((sleep(sleepTimeSeconds))==0)
+        {
+            syslog(LOG_INFO, "Demon awake");
+            printf("Demon awake");
+        }
     }
 
-    
-    printf("source: %s\ntarget: %s\nrecurency: %s\nthreshold: %d\nsleep time: %d\n", sourcePath, targetPath, recurSync ? "true":"false", threshold, sleepTimeSeconds);
     closelog();
     exit(EXIT_SUCCESS);
     return 0;

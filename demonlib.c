@@ -33,7 +33,7 @@ time_t getLastAccesTime(char* path)
     syslog(LOG_ERR, "Error while getting last access time, file %s", path);
     exit(EXIT_FAILURE);   
 }
-void logHandler()
+void logHandler(int sig)
 {
     syslog(LOG_INFO, "Demon woke up - SIGUSR1");
 }
