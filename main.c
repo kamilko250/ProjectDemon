@@ -80,7 +80,8 @@ int main(int argc, char** argv)
 
     while(1)
     {
-
+        clearCatalogs(sourcePath, targetPath, targetPath, recurSync);
+        compareCatalogs(sourcePath, targetPath, threshold, recurSync);
         //czesc wlasciwa demona
 
     }
