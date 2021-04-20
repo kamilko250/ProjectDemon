@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <syslog.h>
 #include <errno.h>
+#include <linux/fs.h>
 
 off_t getSize(char* path);
 mode_t getChmod(char* path);

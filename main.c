@@ -13,38 +13,45 @@ int main(int argc, char** argv)
     struct stat file;
     if(argc<5)
     {
-        printf("Too few args\n");
         syslog(LOG_ERR, "Too few arguments");
         exit(EXIT_FAILURE);
     }
 
 
-    pid_t ProcessID, SessionID;
-
-    ProcessID = fork();
-    printf("ProcessID %d\n", ProcessID);
-    if(ProcessID<0)
+    pid_t pid;
+    pid = fork();
+    if(pid == -1)
     {
         syslog(LOG_ERR, "Wrong child ID");
-        printf("Wrong child ID");
         exit(EXIT_FAILURE);
     }
-    else if(ProcessID>0)
+    else if(pid != 0)
     {
-        //exit(EXIT_SUCCESS);
+        exit(EXIT_SUCCESS);
     }
 
     umask(0);
 
-    SessionID = setsid();
-    printf("SessionID %d\n", SessionID);
-    if(SessionID<0)
+    if(setsid() == -1)
     {
         syslog(LOG_ERR, "Wrong SessionID");
-        printf("Wrong SessionID");
         exit(EXIT_FAILURE);
     }
-    printf("Przed whilem");
+    if(chdir("/") == -1)
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    for(int i = 0; i < 256; i++)
+    {
+        close(i);
+    }
+
+    open ("/dev/null", O_RDWR); /* stdin */
+    dup (0); /* stdout */
+    dup (0);
+
+
     int parameter;
     while((parameter = getopt(argc, argv, "i:o:t:y:r")) != -1)
     {
@@ -62,7 +69,6 @@ int main(int argc, char** argv)
                     else
                     {
                         syslog(LOG_ERR, "Not a source folder");
-                        printf("Not a source folder");
                         exit(EXIT_FAILURE);
                     }
                 }
@@ -80,7 +86,6 @@ int main(int argc, char** argv)
                     else
                     {
                         syslog(LOG_ERR, "Not a target folder");
-                        printf("Not a target folder");
                         exit(EXIT_FAILURE);
                     }
                 }
@@ -107,25 +112,23 @@ int main(int argc, char** argv)
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
     syslog(LOG_INFO, "Synchro-Demon");
-    printf("Synchro-Demon");
     if(signal(SIGUSR1, logHandler)==SIG_ERR)
     {
         syslog(LOG_ERR, "Signal Error!");
-        printf("Signal Error");
+        //printf("Signal Error");
         exit(EXIT_FAILURE);
     }
-
+    int time = sleepTimeSeconds;
     while(1)
     {
         clearCatalogs(sourcePath, targetPath, targetPath, recurSync);
         compareCatalogs(sourcePath, targetPath, threshold, recurSync);
         syslog(LOG_INFO, "Demon has gone to sleep");
-        printf( "Demon has gone to sleep");
-        if((sleep(sleepTimeSeconds))==0)
+        while((time = sleep(time))==0)
         {
-            syslog(LOG_INFO, "Demon awake");
-            printf("Demon awake");
         }
+            syslog(LOG_INFO, "Demon awake");
+        time = sleepTimeSeconds;
     }
 
     closelog();
