@@ -4,6 +4,7 @@
 
 int main(int argc, char** argv)
 {
+
     openlog("PROJEKT", LOG_PID|LOG_CONS, LOG_USER);
     char* sourcePath = NULL;
     char* targetPath = NULL;
@@ -37,22 +38,18 @@ int main(int argc, char** argv)
         syslog(LOG_ERR, "Wrong SessionID");
         exit(EXIT_FAILURE);
     }
+
     if(chdir("/") == -1)
     {
         exit(EXIT_FAILURE);
-    }
-
-    for(int i = 0; i < 256; i++)
-    {
-        close(i);
     }
 
     open ("/dev/null", O_RDWR); /* stdin */
     dup (0); /* stdout */
     dup (0);
 
-
     int parameter;
+
     while((parameter = getopt(argc, argv, "i:o:t:y:r")) != -1)
     {
         switch(parameter)
@@ -92,7 +89,9 @@ int main(int argc, char** argv)
             }
             case 't':
             {
-                sleepTimeSeconds = atoi(optarg);
+                int bufor = atoi(optarg);
+                if(bufor>0)
+                    sleepTimeSeconds = bufor;
                 break;
             }
             case 'r':
@@ -107,7 +106,6 @@ int main(int argc, char** argv)
             }
         }
     }
-
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
@@ -115,22 +113,18 @@ int main(int argc, char** argv)
     if(signal(SIGUSR1, logHandler)==SIG_ERR)
     {
         syslog(LOG_ERR, "Signal Error!");
-        //printf("Signal Error");
         exit(EXIT_FAILURE);
     }
-    int time = sleepTimeSeconds;
     while(1)
     {
+        syslog(LOG_INFO, "Demon has gone to sleep %d seconds ", sleepTimeSeconds;
+        sleep(sleepTimeSeconds);
+        syslog(LOG_INFO, "Demon awake");
         clearCatalogs(sourcePath, targetPath, targetPath, recurSync);
         compareCatalogs(sourcePath, targetPath, threshold, recurSync);
-        syslog(LOG_INFO, "Demon has gone to sleep");
-        while((time = sleep(time))==0)
-        {
-        }
-            syslog(LOG_INFO, "Demon awake");
-        time = sleepTimeSeconds;
-    }
 
+    }
+        
     closelog();
     exit(EXIT_SUCCESS);
     return 0;
