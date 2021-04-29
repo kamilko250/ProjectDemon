@@ -49,21 +49,14 @@ bool compareFiles(char* fileNameSource, char* fileNameTarget, char* sourceFilePa
 {
     if(!strcmp(fileNameTarget, fileNameSource))
     {
-        //printf("        Names are equal.\n");
         if(!isFileUpToDate(sourceFilePath, targetFilePath))
         {
-            //printf("        File updating.\n");
             truncate(targetFilePath, 0); 
             updateFile(sourceFilePath, targetFilePath, threshold);
             syslog(LOG_INFO, "File %s was updated\n", sourceFilePath);
         }
-        else
-        {
-            //printf("        File updated.\n");
-        }
         return true;
     }
-    //printf("        Names are not equal.\n");
     return false;
 }
 void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool recurSync)
@@ -78,9 +71,7 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
         if(sourceStreamDirFile->d_type != DT_DIR)
         {
             char* fileNameSource = sourceStreamDirFile->d_name;
-            //printf("Updating file: %s.\n",fileNameSource);
             targetDir = opendir(targetPath);
-            //printf("    Looking for files in target directory.\n");
             do
             {
                 targetStreamDirFile = readdir(targetDir);
@@ -92,19 +83,16 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
                     {
                         continue;
                     }
-                    //printf("    Found file: %s.\n", fileNameTarget);
                     char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
                     char* targetFilePath = pathToFile(targetPath, fileNameSource);
 
                     if(compareFiles(fileNameSource, fileNameTarget, sourceFilePath, targetFilePath,  threshold))
                     {
-                    //    printf("        File %s is synchronized.\n", sourceFilePath);
                         break;
                     }
                 }
                 else//folder jest pusty
                 {
-                    //printf("    File doesn't exist.\n");
                     char* sourceFilePath = pathToFile(sourcePath, fileNameSource);
                     char* targetFilePath = pathToFile(targetPath, fileNameSource);
                     updateFile(sourceFilePath, targetFilePath, threshold);
@@ -118,20 +106,15 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
             char* dirName = sourceStreamDirFile->d_name;
             if(strcmp(dirName, ".") && strcmp(dirName, ".."))
             {
-                //printf("Directiory to synchronize: %s.\n", sourceStreamDirFile->d_name);
                 char* newDirSourcePath = pathToFile(sourcePath, dirName);
                 char* newDirTargetPath = pathToFile(targetPath, dirName);
                 if(isCatalogExist(dirName,targetPath))
                 {
-                    //printf("Catalog does exists in target directory.\n");
                 }
                 else
                 {
-                    //printf("Catalog doesn't exist in target dirctory.\n");
-                    //printf("Creating catalog...\n");
                     if(mkdir(newDirTargetPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
                     {
-                        //printf("Error while mkdir: %s.\n", newDirTargetPath);
                         syslog(LOG_ERR, "Error while mkdir: %s", newDirTargetPath);
                         exit(EXIT_FAILURE);
                     }        
@@ -140,7 +123,6 @@ void compareCatalogs(char* sourcePath, char* targetPath, int threshold, bool rec
             }
         }
     }
-    //printf("All files synchronized in directory %s.\n", sourcePath);
     closedir(sourceDir);
 }
 void updateFile(char* sourcePath, char* targetPath, int threshold)
@@ -150,13 +132,11 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     if(!sourceFile)
     {
         syslog(LOG_ERR, "Error while opening file %s.", sourcePath);
-        //printf("    Error while opening file %s.\n", sourcePath);
         exit(EXIT_FAILURE);
     }
     if(!targetFile)
     {
         syslog(LOG_ERR, "Error while opening file %s.", targetPath);
-        //printf("    Error while opening file %s.\n", targetPath);
         exit(EXIT_FAILURE);
     }
 
@@ -166,35 +146,27 @@ void updateFile(char* sourcePath, char* targetPath, int threshold)
     int size = getSize (sourcePath);
     if (size > threshold)
     {
-        //printf("    Mapping...");
         char* map = (char*) mmap(0,size, PROT_READ, MAP_SHARED | MAP_FILE, sourceFile, 0);
         write(targetFile, map, size);
         munmap(map, size);
-        //printf("    Mapping complete!");
+        syslog(LOG_INFO, "Mapped %s", targetPath);
     }
     else
     {
-        //printf("    Just coping...\n");
         while((readSourceState = read(sourceFile, bufor, sizeof(bufor)))>0)
         {
             writeTargetState = write(targetFile, bufor, readSourceState);
             if(readSourceState != writeTargetState)
             {
                 syslog(LOG_ERR,"Error while coping from %s to %s",sourcePath, targetPath);
-                //printf("    Error while coping from %s to %s.\n", sourcePath, targetPath);
                 exit(EXIT_FAILURE);
             }
         }
     }
-    //printf("    Closing files...\n");
     close(sourceFile);
     close(targetFile);
-    //printf("    FileChmod updating...\n");
     updateFileChmod(sourcePath, targetPath);
-    //printf("    FileCHmod updated.\n");
-    //printf("    LastModFileTime updating...\n");
     updateLastModFileTime(sourcePath, targetPath);
-    //printf("    LastModFileTime updated.\n");
     syslog(LOG_INFO, "%s was copied", sourcePath);
 }
 int updateFileChmod(char* sourcePath, char* targetPath)
@@ -203,7 +175,6 @@ int updateFileChmod(char* sourcePath, char* targetPath)
     if(chmod(targetPath, sourceChmod)) 
     {
         syslog(LOG_ERR, "Error while changing chmod, file: %s", targetPath);
-        //printf("Error while changing chmod, file: %s\n %d %s\n", targetPath, errno, strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -231,9 +202,10 @@ struct dirent* file;
             {
                if( !( strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0))
                {
-               char* newPath = pathToFile(currentFile, file->d_name);
-               clearCatalogs(sourcePath, targetPath, newPath,"1");
-               char * pathToDelete = changeCatalogs(newPath, sourcePath);
+                    char* newPath = pathToFile(currentFile, file->d_name);
+                    clearCatalogs(sourcePath, targetPath, newPath,"1");
+                    free(newPath);
+                    char * pathToDelete = changeCatalogs(newPath, sourcePath);
                if(!(del=opendir(pathToDelete))) 
                     {
                         remove(newPath);
@@ -243,6 +215,7 @@ struct dirent* file;
                     {
                         closedir(del);
                     }
+                    free(pathToDelete);
                }
             }
         }
@@ -255,6 +228,7 @@ struct dirent* file;
                 remove(newPath);
                 syslog(LOG_INFO, "Deleted file %s", pathToDelete);
             }
+            free(pathToDelete);
         }
      }
      closedir(path);
